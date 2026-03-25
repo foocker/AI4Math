@@ -1,0 +1,687 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{problem}[theorem]{Problem}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Pone}{\mathbf{P}^1}
+
+\title{The Projective Fiber Structure of $x+1/x$ over Finite Fields}
+\author{ShuYu}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Let $q$ be an odd prime power and consider the rational map
+\[
+\theta:\Pone(\F_q)\to\Pone(\F_q),\qquad \theta(x)=x+\frac1x,
+\]
+with $\theta(0)=\infty$ and $\theta(\infty)=\infty$.
+We prove an exact projective fiber law for $\theta$, derive the full indegree classification on its functional graph, compute the image cardinality, and obtain a clean algebraic constraint on genuine $2$-cycles.
+We then sharpen this to a complete existence-and-uniqueness theorem for affine $2$-cycles, and in the split case $q\equiv 1\pmod4$ we give an exact criterion for affine $3$-cycles:
+they exist if and only if $q\equiv 1\pmod{36}$.
+We also obtain an exact affine $4$-cycle decomposition in the split case: one family is governed by $q\equiv 1\pmod{16}$ and a second family by $q\equiv 1\pmod{60}$.
+These results give a self-contained structural core for the dynamics of $x+1/x$ over finite fields.
+We also explain why one should distinguish this map from the standard Latt\`es map attached directly to the CM endomorphism $[1+i]$ on the curve $y^2=x^3+x$.
+
+\medskip\noindent\textit{Formalization status.}
+The affine and projective fiber laws, the reciprocal-preimage lemma, the projective fiber above $\infty$, the non-existence of affine fixed points, the $2$-cycle polynomial constraint, the $2$-cycle characterization ($x^2=-1/2$), the affine image size $(q+1)/2$, the no-preimage count $(q-1)/2$, the projective image size $(q+3)/2$, the full $3$-cycle existence criterion (Theorem~\ref{thm:three-cycle-existence}, including the Frobenius/cyclotomic argument via \texttt{AdjoinRoot}), and the split-case affine $4$-cycle count (Theorem~\ref{thm:four-cycle-existence}) have been verified in Lean~4 with Mathlib without any \texttt{sorry}.
+The remaining packaging gap is the indegree classification (Theorem~\ref{thm:indegree}) as a single final Lean statement.
+\end{abstract}
+
+\section{Introduction}
+
+Let $q$ be an odd prime power.
+The map
+\[
+\theta(x)=x+\frac1x=\frac{x^2+1}{x}
+\]
+defines a rational self-map of the projective line $\Pone(\F_q)$ once we set
+\[
+\theta(0)=\infty,\qquad \theta(\infty)=\infty.
+\]
+Its \emph{functional graph} is the directed graph with vertex set $\Pone(\F_q)$ and one edge
+\[
+x\to\theta(x)
+\]
+leaving each vertex.
+
+The purpose of this note is modest and precise.
+We do not attempt a complete classification of all connected components of this graph.
+Instead, we isolate a theorem package that is already closed and robust:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item the exact affine and projective fibers of $\theta$;
+\item the full indegree classification on $\Pone(\F_q)$;
+\item the image cardinality formula;
+\item the exact existence criterion for genuine affine $2$-cycles;
+\item an exact $3$-cycle criterion in the split case $q\equiv 1\pmod4$.
+\item an exact affine $4$-cycle count in the split case $q\equiv 1\pmod4$.
+\end{enumerate}
+
+These results are sufficiently sharp to support a short note on their own, and they provide a reliable base layer for any future complete classification.
+
+\section{The Exact Fiber Law}
+
+\begin{definition}
+Let $q$ be an odd prime power.
+Define
+\[
+\theta:\Pone(\F_q)\to\Pone(\F_q),\qquad \theta(x)=x+\frac1x
+\]
+with $\theta(0)=\infty$ and $\theta(\infty)=\infty$.
+\end{definition}
+
+\begin{proposition}[Affine fiber law]
+\label{prop:affine-fiber}
+Let $a\in\F_q$ and let $t\in\F_q^\times$.
+Then
+\[
+\theta(t)=a\iff t^2-at+1=0.
+\]
+In particular, the affine preimages of $a$ are exactly the roots in $\F_q$ of the polynomial $t^2-at+1$.
+\end{proposition}
+
+\begin{proof}
+For $t\neq 0$,
+\[
+\theta(t)=a
+\iff
+t+\frac1t=a
+\iff
+t^2-at+1=0.
+\]
+\end{proof}
+
+\begin{corollary}[Exact affine fiber structure]
+\label{cor:affine-fibers}
+Let $a\in\F_q$ and let $\Delta(a)=a^2-4$.
+Then:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item if $\Delta(a)$ is a nonzero square in $\F_q$, then $a$ has exactly two distinct affine preimages;
+\item if $\Delta(a)=0$, equivalently $a=\pm 2$, then $a$ has exactly one affine preimage, namely $\pm 1$;
+\item if $\Delta(a)$ is a nonsquare in $\F_q$, then $a$ has no affine preimage.
+\end{enumerate}
+Whenever two distinct affine preimages exist, they are reciprocal to one another.
+\end{corollary}
+
+\begin{proof}
+By Proposition~\ref{prop:affine-fiber}, affine preimages are roots of a quadratic polynomial with discriminant $\Delta(a)=a^2-4$.
+The trichotomy follows from the usual root-count for quadratics over a field of odd characteristic.
+If $r,s$ are the two roots, then Vieta's formula gives $rs=1$, so $s=r^{-1}$.
+\end{proof}
+
+\begin{proposition}[Projective fiber above infinity]
+\label{prop:infty-fiber}
+The projective fiber above $\infty$ is exactly
+\[
+\theta^{-1}(\infty)=\{0,\infty\}.
+\]
+\end{proposition}
+
+\begin{proof}
+By definition, $\theta(0)=\infty$ and $\theta(\infty)=\infty$.
+No nonzero affine point maps to $\infty$, because for $t\in\F_q^\times$ the value $\theta(t)$ is affine.
+\end{proof}
+
+\begin{corollary}[Projective fiber law]
+\label{cor:projective-fiber}
+For every affine value $a\in\F_q$, the projective fiber above $a$ consists exactly of the nonzero roots of $t^2-at+1=0$, viewed as points of $\Pone(\F_q)$.
+\end{corollary}
+
+\section{Indegree Classification}
+
+\begin{theorem}[Indegree classification on $\Pone(\F_q)$]
+\label{thm:indegree}
+In the functional graph of $\theta$ on $\Pone(\F_q)$:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item every vertex has indegree $0$, $1$, or $2$;
+\item the vertex $\infty$ has indegree $2$;
+\item the only affine vertices of indegree $1$ are $2$ and $-2$;
+\item an affine vertex $a$ has indegree $2$ if and only if $a^2-4$ is a nonzero square in $\F_q$;
+\item an affine vertex $a$ has indegree $0$ if and only if $a^2-4$ is a nonsquare in $\F_q$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Part~(ii) is Proposition~\ref{prop:infty-fiber}.
+
+For affine vertices, Corollary~\ref{cor:affine-fibers} gives the complete root-count.
+Thus affine indegrees are exactly $0$, $1$, or $2$, with indegree $1$ occurring precisely when $a=\pm2$ and indegree $2$ occurring precisely when $a^2-4$ is a nonzero square.
+This proves all remaining parts.
+\end{proof}
+
+\begin{corollary}[Affine indegree counts]
+\label{cor:indegree-counts}
+Among the affine vertices of $\Pone(\F_q)$:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item exactly $2$ vertices have indegree $1$;
+\item exactly $\frac{q-3}{2}$ vertices have indegree $2$;
+\item exactly $\frac{q-1}{2}$ vertices have indegree $0$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+By Theorem~\ref{thm:indegree}, indegree-$1$ vertices are exactly $\pm2$, so there are two of them.
+
+The set of affine image points is the disjoint union of:
+\begin{enumerate}[label=\textup{(\alph*)}]
+\item the two points $\pm2$, each with one affine preimage;
+\item the affine points with two affine preimages.
+\end{enumerate}
+Every nonzero affine source point lies in exactly one affine fiber, and the only fibers of size $1$ are those above $\pm2$.
+Hence
+\[
+q-1 = 1+1 + 2N,
+\]
+where $N$ is the number of affine vertices of indegree $2$.
+Therefore
+\[
+N=\frac{q-3}{2}.
+\]
+The remaining affine vertices have indegree $0$, so their number is
+\[
+q-2-\frac{q-3}{2}=\frac{q-1}{2}.
+\]
+\end{proof}
+
+\section{Image-Size Formulas}
+
+\begin{theorem}[Affine image size]
+\label{thm:affine-image}
+The image of $\theta$ on $\F_q^\times$ has cardinality
+\[
+\left|\theta(\F_q^\times)\right|=\frac{q+1}{2}.
+\]
+\end{theorem}
+
+\begin{proof}
+Each affine image point has either one or two affine preimages.
+By Corollary~\ref{cor:indegree-counts}, exactly two image points have one preimage and exactly $\frac{q-3}{2}$ image points have two preimages.
+Therefore the affine image contains
+\[
+2+\frac{q-3}{2}=\frac{q+1}{2}
+\]
+points.
+\end{proof}
+
+\begin{corollary}[Projective image size]
+\label{cor:projective-image}
+The image of $\theta$ on $\Pone(\F_q)$ has cardinality
+\[
+\left|\theta(\Pone(\F_q))\right|=\frac{q+3}{2}.
+\]
+\end{corollary}
+
+\begin{proof}
+By Proposition~\ref{prop:infty-fiber}, the value $\infty$ belongs to the image.
+Together with Theorem~\ref{thm:affine-image}, this gives
+\begin{align*}
+\left|\theta(\Pone(\F_q))\right|
+&=
+1+\left|\theta(\F_q^\times)\right| \\
+&=
+1+\frac{q+1}{2} \\
+&=
+\frac{q+3}{2}.
+\end{align*}
+\end{proof}
+
+\section{A First Cycle Constraint}
+
+\begin{proposition}[No affine fixed point]
+\label{prop:no-affine-fixed}
+The point $\infty$ is the unique fixed point of $\theta$ on $\Pone(\F_q)$.
+\end{proposition}
+
+\begin{proof}
+Certainly $\theta(\infty)=\infty$.
+If $x\in\F_q^\times$ satisfied $\theta(x)=x$, then $1/x=0$, impossible.
+Also $\theta(0)=\infty\neq 0$.
+\end{proof}
+
+\begin{theorem}[A polynomial constraint for genuine $2$-cycles]
+\label{thm:two-cycle}
+Let $x\in\F_q^\times$ satisfy $\theta(x)\neq 0$ and $\theta(\theta(x))=x$.
+Then
+\[
+(2x^2+1)(x^2+1)=0.
+\]
+\end{theorem}
+
+\begin{proof}
+Set $y=\theta(x)=x+x^{-1}$.
+The relation $\theta(y)=x$ gives
+\[
+y+\frac1y=x.
+\]
+Substituting $y=x+x^{-1}$ and clearing denominators yields
+\[
+(2x^2+1)(x^2+1)=0.
+\]
+This is a routine polynomial elimination.
+\end{proof}
+
+\begin{corollary}[Consequences for genuine $2$-cycles]
+\label{cor:two-cycle}
+Let $x\in\F_q^\times$ satisfy $\theta(x)\neq 0$ and $\theta(\theta(x))=x$.
+Then either
+\[
+x^2=-1
+\qquad\text{or}\qquad
+x^2=-\frac12.
+\]
+If moreover $x^2=-1$, then $\theta(x)=0$, contradicting the hypothesis $\theta(x)\neq0$.
+Hence every genuine affine $2$-cycle must satisfy
+\[
+x^2=-\frac12.
+\]
+\end{corollary}
+
+\begin{proof}
+The factorization in Theorem~\ref{thm:two-cycle} implies the stated alternatives.
+If $x^2=-1$, then $x^{-1}=-x$, so
+\[
+\theta(x)=x+\frac1x=x-x=0,
+\]
+contrary to hypothesis.
+\end{proof}
+
+\begin{corollary}[Exact classification of affine $2$-cycles]
+\label{cor:two-cycle-classification}
+A genuine affine $2$-cycle exists if and only if $-2$ is a square in $\F_q$.
+When it exists, it is unique and has the form
+\[
+x\longleftrightarrow -x,
+\qquad x^2=-\frac12.
+\]
+\end{corollary}
+
+\begin{proof}
+If $x$ lies on a genuine affine $2$-cycle, Corollary~\ref{cor:two-cycle} gives $x^2=-1/2$.
+Hence $-2$ must be a square.
+
+Conversely, suppose $x^2=-1/2$.
+Then $x\neq 0$ and
+\[
+x\cdot(-2x)=-2x^2=1,
+\]
+so $x^{-1}=-2x$.
+Therefore
+\[
+\theta(x)=x+\frac1x=x-2x=-x
+\]
+and similarly $\theta(-x)=x$.
+Thus $\{x,-x\}$ is a genuine affine $2$-cycle.
+
+Finally, the equation $t^2=-1/2$ has either no solution or exactly the two solutions $\pm x$, and these two points form the same $2$-cycle.
+\end{proof}
+
+\begin{proposition}[Third iterate identity]
+\label{prop:third-iterate}
+Assume $\operatorname{char}\F_q\neq 3$.
+For every $x\in\F_q^\times$,
+\[
+\theta^3(x)-x
+=
+\frac{3x^6+9x^4+6x^2+1}{x(x^2+1)(x^4+3x^2+1)}.
+\]
+Moreover, the numerator and denominator are coprime in $\F_q[x]$.
+\end{proposition}
+
+\begin{proof}
+A direct simplification of $\theta^3(x)-x$ gives the stated rational function identity.
+Over $\mathbb{Z}[x]$, the numerator and denominator have greatest common divisor $1$; reducing modulo any prime different from $3$ preserves this coprimality.
+\end{proof}
+
+\begin{theorem}[Polynomial criterion for affine $3$-cycles]
+\label{thm:three-cycle-poly}
+Assume $\operatorname{char}\F_q\neq 3$.
+For $x\in\F_q^\times$, the following are equivalent:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item $x$ lies on a genuine affine $3$-cycle of $\theta$;
+\item $\theta^3(x)=x$;
+\item
+\[
+3x^6+9x^4+6x^2+1=0.
+\]
+\end{enumerate}
+Equivalently, with $y=x^2$, genuine affine $3$-cycles are governed by the cubic equation
+\[
+3y^3+9y^2+6y+1=0.
+\]
+In particular, $\theta$ has at most two affine $3$-cycles.
+\end{theorem}
+
+\begin{proof}
+The equivalence of \textup{(ii)} and \textup{(iii)} follows from Proposition~\ref{prop:third-iterate}, because the numerator and denominator are coprime.
+Thus any affine solution of \textup{(iii)} makes $\theta^3(x)$ well defined and equal to $x$.
+
+Now assume \textup{(ii)}.
+By Proposition~\ref{prop:no-affine-fixed}, $x$ does not have period $1$.
+It also cannot have period $2$, because $\theta^2(x)=x$ would imply
+\[
+\theta^3(x)=\theta(x),
+\]
+and together with $\theta^3(x)=x$ this gives $\theta(x)=x$, impossible.
+Hence the period of $x$ is exactly $3$, so \textup{(ii)} implies \textup{(i)}.
+The converse is immediate.
+
+The reformulation in terms of $y=x^2$ is obtained by substitution.
+Since the sextic in \textup{(iii)} has degree $6$, there are at most six affine period-$3$ points, hence at most two affine $3$-cycles.
+\end{proof}
+
+\begin{theorem}[Exact existence criterion for affine $3$-cycles when $q\equiv 1\pmod4$]
+\label{thm:three-cycle-existence}
+Let $q=p^n$ be an odd prime power with $q\equiv 1\pmod4$ and $p\neq 3$.
+Then the following are equivalent:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item $\theta$ has a genuine affine $3$-cycle on $\F_q$;
+\item the polynomial $3x^6+9x^4+6x^2+1$ has a root in $\F_q$;
+\item $q\equiv 1\pmod{36}$.
+\end{enumerate}
+Whenever these conditions hold, $\theta$ has exactly two affine $3$-cycles.
+\end{theorem}
+
+\begin{proof}
+Because $q\equiv 1\pmod4$, there exists $i\in\F_q$ with $i^2=-1$.
+Set
+\[
+f(x)=3x^6+9x^4+6x^2+1,
+\qquad
+m(u)=u^6-6u^4+9u^2-3.
+\]
+Then for every $x\in\F_q^\times$,
+\[
+f(x)=-x^6\,m(i/x),
+\]
+so $f$ has a root in $\F_q$ if and only if $m$ has a root in $\F_q$.
+By Theorem~\ref{thm:three-cycle-poly}, this is equivalent to the existence of an affine $3$-cycle.
+
+\smallskip\noindent\textit{Backward direction ($q\equiv 1\bmod{36}\;\Longrightarrow\;m$ has a root).}
+Since $36\mid(q-1)$ and $\F_q^\times$ is cyclic of order $q-1$, there exists a primitive $36$th root of unity $\zeta\in\F_q$.
+Set $u=\zeta+\zeta^{-1}$.
+Because $\zeta^6$ is a primitive $6$th root of unity, it satisfies $\zeta^{12}-\zeta^6+1=0$; multiplying out gives
+\[
+\zeta^6\cdot m(u)=\zeta^{12}-\zeta^6+1=0,
+\]
+so $m(u)=0$.
+
+\smallskip\noindent\textit{Forward direction ($m$ has a root $\;\Longrightarrow\;q\equiv 1\bmod{36}$).}
+Let $u\in\F_q$ satisfy $m(u)=0$ and consider the quadratic $g(t)=t^2-ut+1$.
+
+\emph{Case 1: $g$ has a root $\zeta\in\F_q$.}
+Then $\zeta+\zeta^{-1}=u$ and $m(u)=0$, so $\zeta^{12}-\zeta^6+1=0$ by the same Chebyshev identity.
+One checks that $\zeta^{36}=1$ (squaring $\zeta^{18}=-1$) and that no proper divisor of $36$ annihilates $\zeta$: the relation $\zeta^{18}=-1$ rules out every divisor of $18$, while $\zeta^{12}=1$ would force $\zeta^6=2$, hence $3=0$, contradicting $p\neq 3$.
+Thus $\zeta$ has order $36$ in $\F_q^\times$, so $36\mid (q-1)$.
+
+\emph{Case 2: $g$ is irreducible over $\F_q$.}
+Let $L=\F_q[t]/(g)$, a degree-$2$ extension, and let $\zeta$ be the image of $t$ in $L$.
+The Frobenius $\varphi\colon x\mapsto x^q$ satisfies $\varphi(a)=a$ for $a\in\F_q$, so
+\[
+\varphi(\zeta)^2-u\,\varphi(\zeta)+1=(\zeta^2-u\zeta+1)^q=0,
+\]
+using $(\alpha+\beta)^q=\alpha^q+\beta^q$ and $(-1)^q=-1$ in characteristic $p$.
+Thus $\varphi(\zeta)$ is also a root of $g$; the two roots are $\zeta$ and $\zeta^{-1}=u-\zeta$.
+Since $g$ is irreducible over $\F_q$, the root $\zeta$ is not Frobenius-fixed (all irreducible factors of $X^q-X$ are linear), so $\zeta^q=\zeta^{-1}$.
+The same argument as Case~1 shows $\zeta$ has order $36$ in $L^\times$.
+Now $\zeta^{q+1}=\zeta\cdot\zeta^{-1}=1$, so $36\mid(q+1)$, giving $q\equiv 35\pmod{36}$.
+But $35\equiv 3\pmod4$, contradicting $q\equiv 1\pmod4$.
+
+\smallskip\noindent\textit{Exact count.}
+The discriminant of $f$ is $-2^6 3^9$, so in characteristic $p\neq 2,3$ the polynomial $f$ has six distinct roots.
+Each such root has exact period $3$ by Theorem~\ref{thm:three-cycle-poly}.
+Hence there are exactly six affine period-$3$ points, that is, exactly two affine $3$-cycles.
+\end{proof}
+
+\begin{proposition}[Fourth iterate identity]
+\label{prop:fourth-iterate}
+For every odd prime power $q$ and every $x\in\F_q^\times$,
+\[
+\theta^4(x)-x
+=
+\frac{(2x^2+1)(2x^4+4x^2+1)(x^8+7x^6+14x^4+8x^2+1)}
+{x(x^2+1)(x^4+3x^2+1)(x^8+7x^6+13x^4+7x^2+1)}.
+\]
+Moreover, the numerator and denominator are coprime in $\mathbb{Z}[x]$.
+\end{proposition}
+
+\begin{proof}
+A direct simplification of $\theta^4(x)-x$ gives the stated factorization.
+The numerator and denominator are coprime in $\mathbb{Z}[x]$, hence also after reduction modulo any odd prime.
+\end{proof}
+
+\begin{theorem}[Polynomial criterion for affine $4$-cycles]
+\label{thm:four-cycle-poly}
+Let $q$ be an odd prime power and let $x\in\F_q^\times$.
+Then $x$ lies on a genuine affine $4$-cycle of $\theta$ if and only if
+\[
+(2x^4+4x^2+1)(x^8+7x^6+14x^4+8x^2+1)=0.
+\]
+In particular, $\theta$ has at most three affine $4$-cycles.
+\end{theorem}
+
+\begin{proof}
+By Proposition~\ref{prop:fourth-iterate}, the condition $\theta^4(x)=x$ is equivalent to
+\[
+(2x^2+1)(2x^4+4x^2+1)(x^8+7x^6+14x^4+8x^2+1)=0.
+\]
+By Corollary~\ref{cor:two-cycle-classification}, the factor $2x^2+1$ cuts out exactly the affine period-$2$ points.
+Since $\theta$ has no affine fixed point, an affine solution of $\theta^4(x)=x$ has exact period $4$ if and only if it is not of period $2$.
+This proves the stated criterion.
+
+The two exact-period factors have degrees $4$ and $8$, so there are at most $12$ affine points of period $4$, hence at most three affine $4$-cycles.
+\end{proof}
+
+\begin{theorem}[Exact count of affine $4$-cycles when $q\equiv 1\pmod4$]
+\label{thm:four-cycle-existence}
+Let $q=p^n$ with $p\equiv 1\pmod4$, and let $N_4(q)$ denote the number of genuine affine $4$-cycles of $\theta$ on $\F_q$.
+Then
+\[
+N_4(q)=
+\begin{cases}
+0,& q\not\equiv 1\pmod{16}\text{ and }q\not\equiv 1\pmod{60},\\
+1,& q\equiv 1\pmod{16}\text{ and }q\not\equiv 1\pmod{60},\\
+2,& q\not\equiv 1\pmod{16}\text{ and }q\equiv 1\pmod{60},\\
+3,& q\equiv 1\pmod{16}\text{ and }q\equiv 1\pmod{60}.
+\end{cases}
+\]
+Equivalently,
+\[
+N_4(q)=\mathbf{1}_{q\equiv 1\ (\mathrm{mod}\ 16)}+2\,\mathbf{1}_{q\equiv 1\ (\mathrm{mod}\ 60)}.
+\]
+\end{theorem}
+
+\begin{proof}
+Because $p\equiv 1\pmod4$, we have $q\equiv 1\pmod4$, so there exists $i\in\F_q$ with $i^2=-1$.
+Set
+\[
+B(x)=2x^4+4x^2+1,
+\qquad
+C(x)=x^8+7x^6+14x^4+8x^2+1.
+\]
+By Theorem~\ref{thm:four-cycle-poly}, affine period-$4$ points are exactly the roots of $B(x)C(x)$.
+
+For the quartic factor, write $u=i/x$.
+Then
+\[
+x^4B(x)=u^{-4}(u^4-4u^2+2),
+\]
+so $B(x)=0$ if and only if $u$ is a root of
+\[
+m_{16}(u)=u^4-4u^2+2.
+\]
+Now $m_{16}$ is the minimal polynomial of
+\[
+\alpha_{16}=\zeta_{16}+\zeta_{16}^{-1}=2\cos(\pi/8),
+\]
+and $\mathbb{Q}(\alpha_{16})=\mathbb{Q}(\zeta_{16})^+$ is a Galois extension of degree $4$.
+Hence $m_{16}$ has a root in $\F_q$ if and only if Frobenius at $q$ acts trivially on $\mathbb{Q}(\zeta_{16})^+$, equivalently if and only if
+\[
+q\equiv \pm 1 \pmod{16}.
+\]
+Since $q\equiv 1\pmod4$, this reduces to
+\[
+q\equiv 1\pmod{16}.
+\]
+In that case $m_{16}$ splits completely over $\F_q$, so $B$ has exactly four roots in $\F_q$, producing exactly one affine $4$-cycle.
+
+For the octic factor, the same substitution gives
+\[
+x^8C(x)=u^{-8}(u^8-8u^6+14u^4-7u^2+1).
+\]
+Set
+\[
+m_{60}(u)=u^8-7u^6+14u^4-8u^2+1.
+\]
+Then $u^8m_{60}(1/u)=u^8-8u^6+14u^4-7u^2+1$, so $C(x)=0$ if and only if $u=i/x$ is a root of the reciprocal polynomial of $m_{60}$.
+Now $m_{60}$ is the minimal polynomial of
+\[
+\alpha_{60}=\zeta_{60}+\zeta_{60}^{-1}=2\cos(\pi/30),
+\]
+and $\mathbb{Q}(\alpha_{60})=\mathbb{Q}(\zeta_{60})^+$ is Galois of degree $8$.
+Therefore $m_{60}$ has a root in $\F_q$ if and only if
+\[
+q\equiv \pm 1\pmod{60}.
+\]
+Again $q\equiv 1\pmod4$ forces
+\[
+q\equiv 1\pmod{60}.
+\]
+In that case $m_{60}$ splits completely over $\F_q$, so $C$ has exactly eight roots in $\F_q$, producing exactly two affine $4$-cycles.
+
+Finally, $B$ and $C$ are coprime in $\mathbb{Z}[x]$, so their root sets in $\F_q$ are disjoint.
+Hence the total number of affine period-$4$ points is
+\[
+4\,\mathbf{1}_{q\equiv 1\ (\mathrm{mod}\ 16)}+
+8\,\mathbf{1}_{q\equiv 1\ (\mathrm{mod}\ 60)},
+\]
+and division by $4$ gives the stated formula for $N_4(q)$.
+\end{proof}
+
+\section{A Corrected Isogeny Framing}
+
+\begin{remark}[Why this is not yet a complete classification]
+\label{rem:not-complete}
+The results above determine the exact fibers of $\theta$, the indegree distribution, the image size, the exact affine $2$-cycles, the exact affine $3$-cycle criterion in the split case $q\equiv 1\pmod4$, and the exact affine $4$-cycle count in the same split setting.
+They do \emph{not} determine:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item all cycle lengths;
+\item the number of cycles of each length;
+\item the full connected-component decomposition;
+\item the exact tree depth and branching profile in every component.
+\end{enumerate}
+Thus they form a reliable theorem package, but not a complete classification of the functional graph.
+\end{remark}
+
+\begin{remark}[Corrected isogeny interpretation]
+\label{rem:isogeny}
+The map $\theta(x)=x+1/x$ arises naturally as the $x$-coordinate map of a degree-$2$ isogeny attached to the elliptic curve
+\[
+E:y^2=x^3+x.
+\]
+This gives a genuine CM background when $p\equiv 1\pmod4$.
+However, one should not identify the full functional graph of $\theta$ too quickly with the standard Latt\`es dynamics of the endomorphism $[1+i]$ without additional work.
+The exact relationship between the graph of $\theta$ and the Gaussian-integer module picture is subtler than the naive slogan ``$\theta$ is the $[1+i]$-Latt\`es map'' suggests.
+\end{remark}
+
+\section{A Proposed Research Roadmap}
+
+The problems below suggest individual targets, but the path toward a complete classification of the functional graph of $\theta$ calls for a staged strategy rather than a direct assault.
+We record the following roadmap as a guide to future work.
+
+\begin{enumerate}[label=\textbf{Stage \arabic*.}, leftmargin=*, align=left]
+
+\item \textbf{Structural foundation (done).}
+Establish the exact fiber law, indegree distribution, and image-size formulas.
+These results are closed, formally verified in Lean~4, and serve as the ground layer for everything that follows.
+
+\item \textbf{Complete period-$1$ and period-$2$ classification (done).}
+Prove that $\infty$ is the unique fixed point and that a genuine affine $2$-cycle exists if and only if $-2$ is a square in $\F_q$; when it exists it is unique.
+This case is simple enough to close without auxiliary number-theoretic input.
+
+\item \textbf{Complete period-$3$ classification (split case done).}
+The split case $q\equiv 1\pmod4$ is handled by Theorem~\ref{thm:three-cycle-existence} (criterion: $q\equiv 1\pmod{36}$); this case is now fully verified in Lean~4 with Mathlib, including the Frobenius/cyclotomic splitting argument via \texttt{AdjoinRoot}.
+Carry out the analogous analysis for the non-split case $q\equiv 3\pmod4$, where the cyclotomic substitution via $i$ is unavailable and a different approach is needed.
+The goal is an exact criterion covering all odd prime powers.
+
+\item \textbf{Build a general exact-period elimination framework.}
+The iterate $\theta^k(x)-x$ is a rational function whose numerator, after factoring out the contributions of all proper divisors of $k$, produces the ``exact-period-$k$ polynomial'' $\Phi_k(x)$.
+Develop the algebra of this factorization systematically: prove that the factors are coprime, determine their degrees, and identify the number-field structure (minimal polynomials of $2\cos(2\pi m/N)$ for suitable $N$) governing their splitting over $\F_q$.
+The split-case analyses of periods $3$ and $4$ provide the first fully formalized instances of this framework in Lean~4.
+
+\item \textbf{Complete period-$4$ and attack period-$5$.}
+The split case of period-$4$ is settled by Theorems~\ref{thm:four-cycle-poly} and~\ref{thm:four-cycle-existence}, and this count is now fully formalized in Lean~4 with Mathlib, including the cyclotomic $m_{16}$/$m_{60}$ splitting criteria and the characteristic-$3$ correction needed in the quartic/octic decomposition.
+The natural next step is period $5$: identify the exact-period polynomial, determine the governing cyclotomic fields, and obtain a congruence criterion for the existence and count of affine $5$-cycles.
+
+\item \textbf{Distill the short-cycle number-field and Frobenius theory.}
+The pattern already visible in the completed split-case analyses of periods $3$ and $4$ is that exact-period polynomials have roots of the form $2\cos(\pi/m)$ for $m$ determined by $k$, and splitting over $\F_q$ is controlled by a Frobenius condition $q\equiv \pm 1\pmod{m}$.
+Formulate and prove the general theorem relating period-$k$ cycle existence to the splitting of the relevant real cyclotomic field $\mathbb{Q}(\zeta_m)^+$ at $q$.
+
+\item \textbf{A unified short-cycle theorem up to a bound $M$.}
+Combine the results of Stages~2--6 into a single theorem:
+for every $k\leq M$, the exact number $N_k(q)$ of genuine affine $k$-cycles is given by an explicit formula in terms of indicator functions $\mathbf{1}_{q\equiv 1\,(\mathrm{mod}\,m_j)}$ for finitely many moduli $m_j$ depending only on $k$.
+
+\item \textbf{Tree structure and connected components.}
+With the cycle-vertex distribution known, study the in-trees attached to cycle vertices: determine the exact depth, the branching profile at each level, and hence the full description of every connected component as a directed cycle with rooted trees.
+
+\item \textbf{Corrected CM and isogeny synthesis.}
+Once the full graph structure is explicit, return to the isogeny interpretation via $E:y^2=x^3+x$ and the CM endomorphism $[1+i]$.
+Identify precisely which features of the functional graph are predicted by the Gaussian-integer module $E(\F_{p^n})\cong\mathbb{Z}[i]/(\pi^n-1)$, and which require correction or supplementation.
+
+\item \textbf{Full graph classification (terminal goal).}
+Assemble a complete, explicit description of the functional graph of $\theta$ on $\Pone(\F_q)$ for every odd prime power $q$: all cycle lengths, all cycle counts, all tree depths and branching profiles, expressed in terms of arithmetic conditions on $q$.
+
+\end{enumerate}
+
+\section{Further Problems}
+
+\begin{problem}[Complete cycle classification]
+Determine all cycle lengths occurring in the functional graph of $\theta$ on $\Pone(\F_q)$, and compute the exact number of cycles of each length.
+\end{problem}
+
+\begin{problem}[Component decomposition]
+Describe every connected component of the functional graph of $\theta$ on $\Pone(\F_q)$ as a directed cycle with rooted trees attached to its cycle vertices.
+\end{problem}
+
+\begin{problem}[Tree depths and branching profiles]
+For each cycle vertex $c$, determine the exact depth of the in-tree attached to $c$ and the number of vertices at each level of that tree.
+\end{problem}
+
+\begin{problem}[Sharp criteria for short cycles]
+\emph{Solved for $k=2$ in Corollary~\ref{cor:two-cycle-classification}, for $k=3$ in Theorem~\ref{thm:three-cycle-existence}, and for $k=4$ in Theorem~\ref{thm:four-cycle-existence} (split case $q\equiv 1\pmod4$).}
+Find analogous exact existence-and-count criteria for genuine affine $k$-cycles for $k\geq 5$.
+\end{problem}
+
+\begin{problem}[Higher short cycles]
+Theorems~\ref{thm:three-cycle-poly}, \ref{thm:three-cycle-existence}, \ref{thm:four-cycle-poly}, and \ref{thm:four-cycle-existence} settle affine $3$- and $4$-cycles in the split case.
+Push this to $5$-cycles and beyond, preferably in a form that detects not only existence but also the exact number of short cycles.
+\end{problem}
+
+\begin{problem}[Lean formalization of remaining theorems]
+The current Lean~4 formalization (Mathlib, no \texttt{sorry}) covers the fiber law, fixed-point results, $2$-cycle characterization, image-size formulas, the third- and fourth-iterate identities (Propositions~\ref{prop:third-iterate} and~\ref{prop:fourth-iterate}), the exact $3$-cycle existence criterion (Theorem~\ref{thm:three-cycle-existence}), and the split-case $4$-cycle count formula (Theorem~\ref{thm:four-cycle-existence}).
+For the latter, the Lean proof formalizes the $m_{16}$ and $m_{60}$ splitting criteria and treats the characteristic-$3$ quartic/octic overlap separately before assembling the final indicator-function formula.
+The main remaining theorem-level gap is the indegree classification (Theorem~\ref{thm:indegree}) in the same packaged form as the paper.
+\end{problem}
+
+\begin{problem}[Split CM classification]
+When $p\equiv 1\pmod4$, clarify the precise relationship between the functional graph of $\theta$ and the Gaussian-integer module
+\[
+E(\F_{p^n})\cong \mathbb{Z}[i]/(\pi^n-1),
+\]
+and decide whether the full graph of $\theta$ can ultimately be classified by a corrected CM/isogeny formalism.
+\end{problem}
+
+\end{document}
