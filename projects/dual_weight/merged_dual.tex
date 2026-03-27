@@ -1,0 +1,335 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\geometry{a4paper,margin=1in}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Verified Notes on the Dual Weight Distribution of the Code in Theorem 4}
+\author{ShuYu}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Starting from the source Theorem~4 and Table~\ref{tab:source-table1}, we revisit the dual code of the binary minimal linear code $C_{f,g}$. We first reconcile the parameters and note that the table yields a code with seven nonzero weights. Using the classical MacWilliams identity as input, we then give the exact MacWilliams--Krawtchouk formula for the full dual weight distribution, prove that $A_1^{\perp}=A_2^{\perp}=0$, derive the explicit formulas for $A_3^{\perp}$, $A_4^{\perp}$, and $A_5^{\perp}$, prove that $A_3^{\perp}>0$ under the admissible parameter range, and hence obtain $d(C_{f,g}^{\perp})=3$. Finally, we show that if $s$ is even, then the dual weight distribution is symmetric. All new code-specific results proved in this note are formally verified in Lean~4. Only the general MacWilliams identity, used as a standard cited theorem, and the final qualitative remark about $C^{\perp}$ not being a few-weight code remain outside the current Lean formalization.
+\end{abstract}
+
+\section{Source Statement}
+
+We begin by recording the source statement visible in the supplied image. The definitions of $f$, $g$, and the code $C_{f,g}$ come from the preceding Theorem~3 in the source paper.
+
+\begin{theorem}[Source Theorem 4]
+Let $s=y$ and $z=1$. If $m\ge 6$ and $2 \le s \le 2^{t-1}-1$, then the code $C_{f,g}$ in Theorem~3 is a $[2^m-1,m+2]$ binary minimal linear code, and its weight distribution is given by Table~\ref{tab:source-table1}. Furthermore, if $s \le 2^{t-2}$, then
+\begin{equation}
+\frac{w_{\min}}{w_{\max}} \le \frac{1}{2}.
+\end{equation}
+\end{theorem}
+
+\section{Parameters from Source Theorem 4 and Table 1}
+
+Let $q=2^t$. Table~\ref{tab:source-table1} gives the weights and multiplicities of the code $C=C_{f,g}$:
+\begin{table}[h]
+\centering
+\caption{the weight distribution of $C_{f,g}$ in Theorem~4.}
+\label{tab:source-table1}
+\begin{tabular}{c|c}
+$w$ & $A_w$ \\
+\hline
+$0$ & $1$ \\
+$s(q-1)$ & $2$ \\
+$(2s-2)(q-1)$ & $1$ \\
+$2^{m-1}$ & $2^m-1$ \\
+$2^{m-1}-s$ & $2(q+1-s)(q-1)$ \\
+$2^{m-1}-(2s-2)$ & $(q+3-2s)(q-1)$ \\
+$2^{m-1}+q-s$ & $2s(q-1)$ \\
+$2^{m-1}+q-(2s-2)$ & $(2s-2)(q-1)$
+\end{tabular}
+\end{table}
+
+Thus there are seven nonzero weights, or eight weights in total when the zero weight is included.
+
+The total number of codewords obtained from the table is
+\begin{equation}
+\sum_w A_w
+=1+2+1+(2^m-1)+2(q+1-s)(q-1)+(q+3-2s)(q-1)+2s(q-1)+(2s-2)(q-1)
+=2^m+3q^2.
+\end{equation}
+
+Since $C$ is a binary linear code, $|C|$ must be a power of $2$. Therefore the integer
+\begin{equation}
+2^m+3q^2=2^m+3\cdot 2^{2t}
+\end{equation}
+must be a power of $2$.
+
+\begin{proposition}
+The parameters satisfy
+\begin{equation}
+m=2t.
+\end{equation}
+Consequently,
+\begin{equation}
+|C|=2^m+3q^2=4q^2=2^{m+2}.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+If $m<2t$, then
+\begin{equation}
+|C|=2^m\bigl(1+3\cdot 2^{2t-m}\bigr),
+\end{equation}
+and the factor $1+3\cdot 2^{2t-m}$ is an odd integer strictly larger than $1$, so $|C|$ cannot be a power of $2$.
+
+If $m>2t$, then
+\begin{equation}
+|C|=2^{2t}\bigl(2^{m-2t}+3\bigr),
+\end{equation}
+and the factor $2^{m-2t}+3$ is again an odd integer strictly larger than $1$, so $|C|$ cannot be a power of $2$.
+
+Hence neither $m<2t$ nor $m>2t$ is possible, and therefore $m=2t$. Substituting this into $|C|=2^m+3q^2$ gives $|C|=4q^2=2^{m+2}$.
+\end{proof}
+
+This parameter reconciliation is formally verified in Lean~4.
+
+After this derivation, the weights may be rewritten as
+\begin{equation}
+2^{m-1}=q^2/2,
+\end{equation}
+so the nonzero weights become
+\begin{equation}
+s(q-1),\ (2s-2)(q-1),\ q^2/2,\ q^2/2-s,\ q^2/2-(2s-2),\ q^2/2+q-s,\ q^2/2+q-(2s-2),
+\end{equation}
+and the length is
+\begin{equation}
+n=2^m-1=q^2-1.
+\end{equation}
+
+\section{The dual weight enumerator}
+
+Let
+\begin{equation}
+W_C(x)=\sum_{i=0}^{n}A_i x^i
+\end{equation}
+be the weight enumerator of $C$, and let
+\begin{equation}
+W_{C^{\perp}}(x)=\sum_{j=0}^{n}A_j^{\perp}x^j
+\end{equation}
+be the weight enumerator of the dual code.
+
+\begin{theorem}
+For $0\le j\le n=q^2-1$,
+\begin{equation}
+A_j^{\perp}=\frac1{4q^2}\sum_{w} A_w K_j(w),
+\end{equation}
+where the sum runs over the eight weights listed above and
+\begin{equation}
+K_j(w)=\sum_{\ell=0}^{j}(-1)^{\ell}\binom{w}{\ell}\binom{n-w}{j-\ell}
+\end{equation}
+is the binary Krawtchouk polynomial.
+
+Equivalently,
+\begin{equation}
+W_{C^{\perp}}(x)=\frac{(1+x)^n}{4q^2}W_C\!\left(\frac{1-x}{1+x}\right).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Since $|C|=4q^2$, the binary MacWilliams identity gives
+\begin{equation}
+W_{C^{\perp}}(x)=\frac{(1+x)^n}{|C|}W_C\!\left(\frac{1-x}{1+x}\right)
+=\frac{(1+x)^n}{4q^2}W_C\!\left(\frac{1-x}{1+x}\right).
+\end{equation}
+Extracting the coefficient of $x^j$ yields the Krawtchouk expansion.
+\end{proof}
+
+\begin{remark}
+The theorem above is used as a classical coding-theoretic input and is cited rather than formalized here. What is formally verified in Lean~4 are the new code-specific consequences extracted from this formula in the rest of the note.
+\end{remark}
+
+\section{The first dual coefficients}
+
+Let
+\begin{equation}
+M_r=\sum_w A_w w^r
+\end{equation}
+denote the $r$-th power moment of $C$.
+
+\begin{lemma}
+The first two power moments are
+\begin{equation}
+M_1=2q^2(q^2-1),
+\qquad
+M_2=q^4(q^2-1).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+This follows by direct substitution of the eight entries from Table~\ref{tab:source-table1} and straightforward simplification.
+\end{proof}
+
+These two power-moment identities are formally verified in Lean~4.
+
+\begin{proposition}
+The dual code satisfies
+\begin{equation}
+A_1^{\perp}=0,
+\qquad
+A_2^{\perp}=0.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Since $|C|=4q^2=2^{m+2}$, the dimension is $k=m+2$, and $n=q^2-1$.
+
+By the first two Pless power moments,
+\begin{equation}
+M_1=2^{k-1}(n-A_1^{\perp}),
+\end{equation}
+and
+\begin{equation}
+M_2=2^{k-2}\bigl(n(n+1)-2nA_1^{\perp}+2A_2^{\perp}\bigr).
+\end{equation}
+Using $2^k=4q^2$, $n=q^2-1$, $M_1=2q^2(q^2-1)$, and $M_2=q^4(q^2-1)$, the first identity yields $A_1^{\perp}=0$, and then the second yields $A_2^{\perp}=0$.
+\end{proof}
+
+The vanishing statements $A_1^{\perp}=0$ and $A_2^{\perp}=0$ are formally verified in Lean~4.
+
+\section{Explicit low-weight multiplicities}
+
+\begin{theorem}
+The number of codewords of weight $3$ in $C^{\perp}$ is
+\begin{equation}
+\begin{aligned}
+A_3^{\perp}
+=\frac{1}{6}\Bigl(&q^4+(3-6s)q^3+(18s^2-26s+10)q^2 \\
+&+(-20s^3+48s^2-40s+12)q+(20s^3-66s^2+72s-26)\Bigr).
+\end{aligned}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+From the third Pless power moment and the already proved equalities $A_1^{\perp}=A_2^{\perp}=0$, one obtains
+\begin{equation}
+M_3=2^{k-3}\bigl(n^2(n+3)-6A_3^{\perp}\bigr).
+\end{equation}
+Substituting the Table~\ref{tab:source-table1} weights and multiplicities into $M_3$ and simplifying gives the stated formula.
+\end{proof}
+
+This formula is formally verified in Lean~4. In the formal development, it is also checked independently from the Krawtchouk-polynomial expression.
+
+\begin{proposition}
+For the admissible range $q=2^t$, $t\ge 3$, and $2\le s\le q/2-1$, one has
+\begin{equation}
+A_3^{\perp}>0.
+\end{equation}
+Hence
+\begin{equation}
+d(C^{\perp})=3.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Set
+\begin{equation}
+r=q-2s.
+\end{equation}
+Then $2\le r\le q-4$. Rewriting the formula for $A_3^{\perp}$ gives
+\begin{equation}
+A_3^{\perp}=\frac{q-1}{12}F(q,r),
+\end{equation}
+where
+\begin{equation}
+F(q,r)=3q^2r-6qr^2+5r^3+9q^2-34qr+33r^2-44q+72r+52.
+\end{equation}
+For fixed $r$, we have
+\begin{equation}
+\frac{\partial F}{\partial q}=6qr-6r^2+18q-34r-44.
+\end{equation}
+Since $q\ge r+4$, this implies
+\begin{equation}
+\frac{\partial F}{\partial q}
+\ge 6r(r+4)-6r^2+18(r+4)-34r-44
+=8r+28>0.
+\end{equation}
+Thus $F(q,r)$ is increasing in $q$, and so
+\begin{equation}
+F(q,r)\ge F(r+4,r)=2(r^3+4r^2+6r+10)>0.
+\end{equation}
+Therefore $A_3^{\perp}>0$. Together with $A_1^{\perp}=A_2^{\perp}=0$, this proves $d(C^{\perp})=3$.
+\end{proof}
+
+The positivity statement $A_3^{\perp}>0$ and the conclusion $d(C^{\perp})=3$ are formally verified in Lean~4.
+
+\begin{proposition}
+The next two coefficients are
+\begin{equation}
+\begin{aligned}
+A_4^{\perp}=\frac1{24}\Bigl(&q^6-8q^5s+36q^4s^2-80q^3s^3+72q^2s^4+4q^5-40q^4s+120q^3s^2 \\
+&-16q^2s^3-288qs^4+13q^4-56q^3s-324q^2s^2+1104qs^3+216s^4 \\
+&-4q^3+488q^2s-1632qs^2-1008s^3-198q^2+1056qs+1800s^2 \\
+&-240q-1440s+424\Bigr),
+\end{aligned}
+\end{equation}
+and
+\begin{equation}
+\begin{aligned}
+A_5^{\perp}=\frac1{120}\Bigl(&q^8-10q^7s+60q^6s^2-200q^5s^3+360q^4s^4-272q^3s^5+5q^7-70q^6s \\
+&+360q^5s^2-680q^4s^3-160q^3s^4+1360q^2s^5+20q^6-220q^5s+180q^4s^2 \\
+&+2560q^3s^3-4600q^2s^4-2720qs^5+30q^5+508q^4s-4520q^3s^2+4400q^2s^3 \\
+&+14240qs^4+1632s^5-264q^4+2672q^3s+2560q^2s^2-30720qs^3-9840s^4 \\
+&-440q^3-6080q^2s+32800qs^2+24640s^3+2440q^2-16960qs-31440s^2 \\
+&+3360q+20160s-5152\Bigr).
+\end{aligned}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+These formulas follow by direct evaluation of the MacWilliams--Krawtchouk expression for $A_j^{\perp}$ with $j=4,5$. Specifically, using the Krawtchouk polynomials in the variable $D=n-2w$,
+\begin{equation}
+24 K_4(w) = D^4-(6n-8)D^2+3n(n-2),
+\end{equation}
+\begin{equation}
+120 K_5(w) = D^5-(10n-20)D^3+(15n^2-50n+24)D,
+\end{equation}
+we substitute the $D$-values for each table weight and verify that
+\begin{equation}
+\sum_w A_w D_w^4 = 4q^2\bigl(\text{numerator of } 24A_4^{\perp}+n(3n-2)\bigr),
+\end{equation}
+\begin{equation}
+\sum_w A_w D_w^5 = 4q^2\bigl(\text{numerator of } 120A_5^{\perp}+(10q^2-30)\cdot\text{numerator of } 6A_3^{\perp}\bigr).
+\end{equation}
+Both identities are polynomial equalities in $q$ and $s$, verified formally in Lean by the \texttt{ring} tactic.
+\end{proof}
+
+\section{Symmetry for even $s$}
+
+\begin{proposition}
+If $s$ is even, then
+\begin{equation}
+A_j^{\perp}=A_{n-j}^{\perp}
+\qquad
+(0\le j\le n).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+When $s$ is even, every weight appearing in Table~\ref{tab:source-table1} is even: $q^2/2$ is even because $q=2^t$ with $t\ge 3$, and the remaining seven weights are visibly even as well. Hence every codeword of $C$ has even Hamming weight, so $C$ is an even code. Therefore the all-ones vector $\mathbf{1}$ lies in $C^{\perp}$. The map
+\begin{equation}
+c\longmapsto c+\mathbf{1}
+\end{equation}
+is then a bijection on $C^{\perp}$ sending words of weight $j$ to words of weight $n-j$, and the symmetry follows.
+\end{proof}
+
+This symmetry statement is formally verified in Lean~4.
+
+\begin{remark}
+The MacWilliams formula gives the complete dual weight distribution. In general, $C^{\perp}$ is not a few-weight code, so the coefficients $A_j^{\perp}$ are most naturally described by the Krawtchouk expansion rather than by a short finite list. This is a qualitative observation rather than a formalized theorem in the current Lean development.
+\end{remark}
+
+\end{document}
